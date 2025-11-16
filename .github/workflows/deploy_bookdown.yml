@@ -1,32 +1,42 @@
 on:
   push:
-     branches:
-       - main
+    branches:
+      - main
   pull_request:
-     branches:
-       - main
+    branches:
+      - main
 
 name: renderbook
 
 permissions:
   contents: write
   pages: write
-  gh-pages: write
+  id-token: write
 
 jobs:
   bookdown:
     name: Render-Book
     runs-on: ubuntu-latest
-    container: 
+
+    container:
       image: foxsen76/archbase-builder:latest
+
     steps:
-      - name: bookdown builder
-        run: cd /opt/archbase && git pull && make -j 8 && cp -a ./_book /github/home/
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build book
+        run: |
+          make -j 8
+          cp -a ./_book /github/home/
 
       - name: Deploy to GitHub Pages
-        uses: Cecilapp/GitHub-Pages-deploy@v3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          email: 2503799872@qq.com
-          build_dir: /github/home/_book/
+          path: /github/home/_book/
+
+      - name: Deploy
+        uses: actions/deploy-pages@v4
